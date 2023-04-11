@@ -6,7 +6,7 @@ from langchain.agents import Tool
 from langchain.schema import AgentAction, AgentFinish
 from typing import List, Union
 from langchain.agents import Tool, AgentExecutor
-from langchain import OpenAI, SerpAPIWrapper
+from langchain import GoogleSearchAPIWrapper, OpenAI, SerpAPIWrapper
 from classes.BashProcess import BashProcess
 from langchain.agents import Tool, AgentExecutor, LLMSingleActionAgent, AgentOutputParser
 from langchain.prompts import BaseChatPromptTemplate
@@ -19,12 +19,13 @@ import re
 bash = BashProcess("D:/Documentos/webblocks/test", False, True)
 os.environ["LANGCHAIN_HANDLER"] = "langchain"
 # search = SerpAPIWrapper()
+search = GoogleSearchAPIWrapper()
 tools = [
-    # Tool(
-    #     name="Current Search",
-    #     func=search.run,
-    #     description="useful for when you need to answer questions about current events or the current state of the world. the input to this should be a single search term."
-    # ),
+    Tool(
+        name="Current Search",
+        func=search.run,
+        description="useful for when you need to answer questions about current events or the current state of the world. the input to this should be a single search term."
+    ),
     Tool(
         name="Windows Terminal",
         func=bash.run,
@@ -34,7 +35,7 @@ tools = [
 ]
 
 # Set up the base template
-template = """Answer the following questions as best you can. If you use the terminal, remember that it doesn't recognize linux commands and use yarn rather than npm. You have access to the following tools:
+template = """Answer the following questions as best you can. If you use the terminal, remember that it doesn't recognize linux commands and use yarn rather than npm. You only have access to the following tools:
 
 {tools}
 
@@ -49,7 +50,7 @@ Observation: the result of the action
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
-Begin!
+Begin! Remember that you can only use the tools given above.
 
 Question: {input}
 {agent_scratchpad}"""
