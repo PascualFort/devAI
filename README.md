@@ -7,6 +7,7 @@ devAI is a Python console chatbot built with LangChain that is designed to assis
 To use devAI, you need to have the following dependencies installed:
 
 - [LangChain](https://github.com/langchain/langchain) - A natural language processing library for Python.
+- [OpenAI API](https://beta.openai.com/) - An API that provides access to OpenAI's machine learning models. You need to set the `OPENAI_API_KEY` environment variable to your API key to use devAI.
 - [Google Custom Search API](https://developers.google.com/custom-search/v1/overview) - An API that provides access to Google's search results. You need to set the `GOOGLE_API_KEY` and `GOOGLE_CSE_ID` environment variables to use devAI.
 
 ## Setting Up
