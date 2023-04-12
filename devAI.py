@@ -21,7 +21,6 @@ load_dotenv('process.env')
 
 
 # Set up tools
-
 search = GoogleSearchAPIWrapper()
 bash = BashProcess("D:/Documentos/webblocks/test", False, True)
 os.environ["LANGCHAIN_HANDLER"] = "langchain"
@@ -52,7 +51,7 @@ You only have access to the following tools:
 ##
 Use the following format:
 
-Question: the input question you must answer if it is not a question, give a human response
+Question: the input question you must answer. If it is not a question, give a human response
 Thought: you should always think about what to do
 *Action: the action to take, it has to be one of [{tool_names}]
 *Action Input: the input to the action
@@ -62,7 +61,7 @@ Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
 #
-The lines starting with the * symbol are optional. Remember: you can only use this format to communicate.
+The lines starting with the * symbol are optional. Remember: you can only communicate using this format.
 ##
 Begin!
 
@@ -70,13 +69,12 @@ History of the current conversation:
 {history}
 Question: {input}
 {agent_scratchpad}"""
+
 # Set up a prompt template
 
 
 class CustomPromptTemplate(BaseChatPromptTemplate):
-    # The template to use
     template: str
-    # The list of tools available
     tools: List[Tool]
 
     def format_messages(self, **kwargs) -> str:
@@ -140,8 +138,8 @@ llm = ChatOpenAI(temperature=0)
 # local_path = 'D:\Documentos\AI\models\gpt-x-alpaca-13b-native-4bit-128g\ggml-model-q4_1.bin'
 # llm = GPT4All(model=local_path,
 # callback_manager=callback_manager, verbose=True)
-# LLM chain consisting of the LLM and a prompt
 
+# LLM chain consisting of the LLM and a prompt
 llm_chain = LLMChain(
     llm=llm, prompt=prompt, memory=ConversationBufferMemory(input_key="input"))
 tool_names = [tool.name for tool in tools]
@@ -158,5 +156,6 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 
 while (True):
     prompt = input("User:")
-    agent_executor.run(history=llm_chain.memory.buffer, input=prompt)
-    print(llm_chain.memory.buffer)
+    if (prompt == "exit"):
+        break
+    print(agent_executor.run(history=llm_chain.memory.buffer, input=prompt))
