@@ -2,18 +2,20 @@ import os
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import AgentAction, AgentFinish
 from typing import List, Union
-from langchain import ConversationChain, GoogleSearchAPIWrapper, HuggingFaceHub, SerpAPIWrapper
-from classes.BashProcess import BashProcess
 from langchain.agents import Tool, AgentExecutor, LLMSingleActionAgent, AgentOutputParser
 from langchain.prompts import BaseChatPromptTemplate
 from langchain.prompts.chat import HumanMessage
 from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
 from typing import List, Union
+from langchain.utilities import BashProcess
+import re
+from langchain import GoogleSearchAPIWrapper, HuggingFaceHub, SerpAPIWrapper
 from langchain.llms import GPT4All
 from langchain.callbacks.base import CallbackManager
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-import re
+
+
+# Aristotle: Plato, I understand your belief in the Forms, but I believe that the true essence of things lies in their physical existence. Plato: But Aristotle, the physical world is constantly changing and imperfect. The Forms represent the true reality. Aristotle: I agree that the physical world is imperfect, but it is still real and tangible. The Forms are just abstract concepts. Plato: But Aristotle, the Forms are eternal and unchanging. They represent the ultimate truth. Aristotle: I believe that truth can be found through observation and experience, not just through abstract concepts. Plato: But Aristotle, the physical world is just a shadow of the true reality. The Forms are the only way to reach true knowledge. Aristotle: I disagree, Plato. The physical world is just as important as the world of Forms. We must study both to gain a complete understanding of reality. And so on...
 
 # dotenv
 from dotenv import load_dotenv
@@ -22,7 +24,7 @@ load_dotenv('process.env')
 
 # Set up tools
 search = GoogleSearchAPIWrapper()
-bash = BashProcess("D:/Documentos/webblocks/test", False, True)
+bash = BashProcess()
 os.environ["LANGCHAIN_HANDLER"] = "langchain"
 tools = [
     Tool(
@@ -31,11 +33,16 @@ tools = [
         description="useful for when you need to answer questions about current events or the current state of the world. the input to this should be a single search term."
     ),
     Tool(
-        name="Windows Terminal",
+        name="Terminal",
         func=bash.run,
-        description="useful for executing bash commands. It doesn't work properly with shell commands.",
+        description="useful for executing with shell commands.",
         # return_direct=True
-    )
+    ),
+    Tool(
+        name="Error",
+        func=search.run,
+        description="This tool notifies you when you type a wrong format."
+    ),
 ]
 
 # Set up the base template
@@ -61,7 +68,7 @@ Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
 #
-The lines starting with the * symbol are optional. Remember: you can only communicate using this format.
+The lines starting with the * symbol are optional. If you don't use this format, you will get a "501 Wrong format" error.
 ##
 Begin!
 
@@ -121,7 +128,7 @@ class CustomOutputParser(AgentOutputParser):
         regex = r"Action: (.*?)[\n]*Action Input:[\s]*(.*)"
         match = re.search(regex, llm_output, re.DOTALL)
         if not match:
-            raise ValueError(f"Could not parse LLM output: `{llm_output}`")
+            return AgentAction(tool="error", tool_input="Wrong format", log=llm_output)
         action = match.group(1).strip()
         action_input = match.group(2)
         # Return the action and action input
@@ -155,7 +162,7 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 
 
 while (True):
-    prompt = input("User:")
+    prompt = input("User: ")
     if (prompt == "exit"):
         break
     print(agent_executor.run(history=llm_chain.memory.buffer, input=prompt))

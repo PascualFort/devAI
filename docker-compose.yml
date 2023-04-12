@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  python_app:
+    build: ./app
+    container_name: python_app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./app:/app
+    working_dir: /app
+
+# networks:
+#   default:
+#     external:
+#       name: my_network
+
+volumes:
+  app_data:
+    name: app_data
