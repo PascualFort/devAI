@@ -1,25 +1,30 @@
 import os
-from langchain.utilities import SerpAPIWrapper
-from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
-from langchain.agents import Tool
 from langchain.schema import AgentAction, AgentFinish
 from typing import List, Union
-from langchain.agents import Tool, AgentExecutor
-from langchain import GoogleSearchAPIWrapper, OpenAI, SerpAPIWrapper
+from langchain import ConversationChain, GoogleSearchAPIWrapper, HuggingFaceHub, SerpAPIWrapper
 from classes.BashProcess import BashProcess
 from langchain.agents import Tool, AgentExecutor, LLMSingleActionAgent, AgentOutputParser
 from langchain.prompts import BaseChatPromptTemplate
-from langchain import SerpAPIWrapper, LLMChain
+from langchain.prompts.chat import HumanMessage
+from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
 from typing import List, Union
-from langchain.schema import AgentAction, AgentFinish, HumanMessage
+from langchain.llms import GPT4All
+from langchain.callbacks.base import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import re
 
+# dotenv
+from dotenv import load_dotenv
+load_dotenv('process.env')
+
+
+# Set up tools
+
+search = GoogleSearchAPIWrapper()
 bash = BashProcess("D:/Documentos/webblocks/test", False, True)
 os.environ["LANGCHAIN_HANDLER"] = "langchain"
-# search = SerpAPIWrapper()
-search = GoogleSearchAPIWrapper()
 tools = [
     Tool(
         name="Current Search",
@@ -35,23 +40,34 @@ tools = [
 ]
 
 # Set up the base template
-template = """Answer the following questions as best you can. If you use the terminal, remember that it doesn't recognize linux commands and use yarn rather than npm. You only have access to the following tools:
-
+template = """You are a cooperative and friendly assistant. 
+Given a history of the current conversation and a question, create a final answer. 
+If it is not a question, answer by making conversation. 
+To find the best answer you have to refer first to 
+the History of the current conversation, and, 
+if it is not enough, use any of the avaliable tools. 
+##
+You only have access to the following tools:
 {tools}
-
+##
 Use the following format:
 
-Question: the input question you must answer
+Question: the input question you must answer if it is not a question, give a human response
 Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
+*Action: the action to take, it has to be one of [{tool_names}]
+*Action Input: the input to the action
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer
 Final Answer: the final answer to the original input question
 
-Begin! Remember that you can only use the tools given above.
+#
+The lines starting with the * symbol are optional. Remember: you can only use this format to communicate.
+##
+Begin!
 
+History of the current conversation:
+{history}
 Question: {input}
 {agent_scratchpad}"""
 # Set up a prompt template
@@ -87,7 +103,7 @@ prompt = CustomPromptTemplate(
     tools=tools,
     # This omits the `agent_scratchpad`, `tools`, and `tool_names` variables because those are generated dynamically
     # This includes the `intermediate_steps` variable because that is needed
-    input_variables=["input", "intermediate_steps"]
+    input_variables=["input", "intermediate_steps", "history"]
 )
 
 
@@ -116,14 +132,20 @@ class CustomOutputParser(AgentOutputParser):
 
 output_parser = CustomOutputParser()
 
-
-memory = ConversationBufferMemory(
-    memory_key="chat_history", return_messages=True)
+# LLM Options
 llm = ChatOpenAI(temperature=0)
-
+# llm = HuggingFaceHub(repo_id="anon8231489123/gpt4-x-alpaca-13b-native-4bit-128g",model_kwargs={"temperature": 0, "max_length": 64})
+# local llm
+# callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+# local_path = 'D:\Documentos\AI\models\gpt-x-alpaca-13b-native-4bit-128g\ggml-model-q4_1.bin'
+# llm = GPT4All(model=local_path,
+# callback_manager=callback_manager, verbose=True)
 # LLM chain consisting of the LLM and a prompt
-llm_chain = LLMChain(llm=llm, prompt=prompt)
+
+llm_chain = LLMChain(
+    llm=llm, prompt=prompt, memory=ConversationBufferMemory(input_key="input"))
 tool_names = [tool.name for tool in tools]
+
 agent = LLMSingleActionAgent(
     llm_chain=llm_chain,
     output_parser=output_parser,
@@ -131,9 +153,10 @@ agent = LLMSingleActionAgent(
     allowed_tools=tool_names
 )
 agent_executor = AgentExecutor.from_agent_and_tools(
-    agent=agent, tools=tools, verbose=True, memory=memory)
+    agent=agent, tools=tools, verbose=True)
 
 
 while (True):
     prompt = input("User:")
-    agent_executor.run(input=prompt)
+    agent_executor.run(history=llm_chain.memory.buffer, input=prompt)
+    print(llm_chain.memory.buffer)
