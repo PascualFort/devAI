@@ -11,11 +11,6 @@ services:
       - ./app:/app
     working_dir: /app
 
-# networks:
-#   default:
-#     external:
-#       name: my_network
-
 volumes:
   app_data:
     name: app_data
