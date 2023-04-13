@@ -1,47 +1,36 @@
 # devAI
 
-devAI is a Python console chatbot built with LangChain that is designed to assist developers in building their projects, answer their programming-related questions, and even help them search the internet for information.
-
-## Dependencies
-
-To use devAI, you need to have the following dependencies installed:
-
-- [LangChain](https://github.com/langchain/langchain) - A natural language processing library for Python.
-- [OpenAI API](https://beta.openai.com/) - An API that provides access to OpenAI's machine learning models. You need to set the `OPENAI_API_KEY` environment variable to your API key to use devAI.
-- [Google Custom Search API](https://developers.google.com/custom-search/v1/overview) - An API that provides access to Google's search results. You need to set the `GOOGLE_API_KEY` and `GOOGLE_CSE_ID` environment variables to use devAI.
-
-## Setting Up
-
-After installing the dependencies and setting up the environment variables, you can download the devAI project files from the GitHub repository (https://github.com/your_username/devAI). Then, open a terminal or command prompt, navigate to the project directory, and run the following command:
-
-```
-python devAI.py
-```
-
-This will launch the devAI console chatbot, and you can start chatting with it right away.
-
-Note that you will be able to create projects using the "Powershell Terminal" tool.
+devAI is a cooperative and friendly AI assistant built using the GPT-4 architecture. This assistant is designed to be resourceful and helpful, providing answers and solutions to a wide range of questions and tasks. The devAI project consists of multiple tools, a custom prompt template, output parser, and language models to provide the best possible assistance to users.
 
 ## Features
 
-devAI is designed to help developers in various ways. Here are some of its features:
+- Friendly and cooperative AI assistant
+- Based on the advanced GPT-4 architecture
+- Customizable prompt templates and output parsers
+- Multiple tools for different tasks, such as web search, terminal commands, and user input
+- Integration with various language models, such as ChatOpenAI, HuggingFaceHub, and GPT4All
 
-- **Build Projects**: devAI can assist you in building your projects by suggesting solutions to common problems, providing code snippets, and giving you tips and advice.
+## Getting Started
 
-- **Answer Questions**: devAI can answer your programming-related questions, such as syntax, functions, libraries, and frameworks.
+### Prerequisites
 
-- **Search the Internet**: devAI can help you search the internet for information related to your project or question.
+- Docker and Docker Compose installed on your system
 
-- **Beta Version**: As mentioned earlier, devAI is still in beta. It means that it is not perfect and may have bugs and limitations. We appreciate your feedback and suggestions to help us improve the project.
+### Installation and Running
 
-## Contributing
+1. Clone the devAI repository to your local machine.
+2. Navigate to the project directory.
+3. Build the Docker image by running `docker-compose build`.
+4. Start the Docker container using `docker-compose up -d`.
+5. Access the running container with `docker exec -it python_app /bin/bash`.
+6. Run the devAI application by executing `python devAI.py`.
+7. Interact with the AI assistant by providing questions or prompts.
+8. To exit the application, type 'exit' and press Enter. To stop and remove the container, run `docker-compose down`.
 
-We welcome contributions to devAI. If you find a bug or have a suggestion for a new feature, please create an issue on the GitHub repository. If you want to contribute code, please fork the repository, make your changes, and submit a pull request.
+## Contributions
+
+Contributions to the devAI project are welcome! Feel free to submit a pull request or open an issue on GitHub.
 
 ## License
 
-devAI is released under the MIT License. See the LICENSE file for details.
-
-## Acknowledgments
-
-devAI was inspired by other chatbots, AI projects, and the need for a simple tool to assist developers. We thank the open-source community for their contributions and support.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
