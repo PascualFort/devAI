@@ -1,3 +1,4 @@
+from classes.BashProcess import BashProcess
 import os
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import AgentAction, AgentFinish
@@ -7,8 +8,6 @@ from langchain.prompts import BaseChatPromptTemplate
 from langchain.prompts.chat import HumanMessage
 from langchain import LLMChain
 from langchain.chat_models import ChatOpenAI
-from typing import List, Union
-from langchain.utilities import BashProcess
 import re
 from langchain import GoogleSearchAPIWrapper, HuggingFaceHub, SerpAPIWrapper
 from langchain.llms import GPT4All
@@ -19,12 +18,13 @@ from langchain.callbacks.base import CallbackManager
 
 # dotenv
 from dotenv import load_dotenv
+
 load_dotenv('process.env')
 
 
 # Set up tools
+bash = BashProcess("/subprocess_dir")
 search = GoogleSearchAPIWrapper()
-bash = BashProcess()
 os.environ["LANGCHAIN_HANDLER"] = "langchain"
 tools = [
     Tool(
@@ -35,18 +35,30 @@ tools = [
     Tool(
         name="Terminal",
         func=bash.run,
-        description="useful for executing with shell commands.",
+        description="useful for executing with shell commands. With this tool you can create files, scrape information, execute files and much more.",
+        # return_direct=True
+    ),
+    Tool(
+        name="User input",
+        func=input,
+        description="useful if you need information that you can only get by the user (such as a project link or a folder name). The input should be the question you want to ask",
         # return_direct=True
     ),
     Tool(
         name="Error",
-        func=search.run,
+        func=lambda x: print("This is not a valid tool"),
         description="This tool notifies you when you type a wrong format."
     ),
 ]
 
 # Set up the base template
-template = """You are a cooperative and friendly assistant. 
+template = """
+##
+Your name is devAI. You are a cooperative and friendly assistant. You don't like to ask too much before trying to find the answers yourself,
+but you prefer to ask before making a mistake. You allways try to check that the result of your actions are as expected, 
+even if it means to work a little more.
+
+##
 Given a history of the current conversation and a question, create a final answer. 
 If it is not a question, answer by making conversation. 
 To find the best answer you have to refer first to 
@@ -151,16 +163,19 @@ llm_chain = LLMChain(
     llm=llm, prompt=prompt, memory=ConversationBufferMemory(input_key="input"))
 tool_names = [tool.name for tool in tools]
 
+allowed_tools = List.copy(tool_names)
+allowed_tools.remove("Error")
 agent = LLMSingleActionAgent(
     llm_chain=llm_chain,
     output_parser=output_parser,
     stop=["\nObservation:"],
-    allowed_tools=tool_names
+    allowed_tools=allowed_tools
 )
 agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent, tools=tools, verbose=True)
 
 
+print(agent_executor.run(history=llm_chain.memory.buffer, input="hello!"))
 while (True):
     prompt = input("User: ")
     if (prompt == "exit"):
